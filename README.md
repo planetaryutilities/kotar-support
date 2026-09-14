@@ -1,8 +1,8 @@
-# Starforge WebIDE Support
+# Starforge Kotar Support
 
-Welcome to the public support and documentation repository for **Starforge WebIDE**.
+Welcome to the public support and documentation repository for **Starforge Kotar**.
 
-Starforge WebIDE is a browser-based environment for working with SysML v2 models. This repository provides a public location for:
+Starforge Kotar is a browser-based environment for working with SysML v2 models. This repository provides a public location for:
 
 - User documentation
 - User manuals and tutorials
@@ -13,15 +13,15 @@ Starforge WebIDE is a browser-based environment for working with SysML v2 models
 - Documentation feedback
 - Release information
 
-> **Important:** This repository does not contain the Starforge WebIDE source code.
+> **Important:** This repository does not contain the Starforge Kotar source code.
 
-Starforge WebIDE is commercially distributed software and is not open-source software. Publication of this repository does not grant any license to the Starforge WebIDE software.
+Starforge Kotar is commercially distributed software and is not open-source software. Publication of this repository does not grant any license to the Starforge Kotar software.
 
 ---
 
 ## Documentation
 
-The primary Starforge WebIDE documentation is available in the repository Wiki.
+The primary Starforge Kotar documentation is available in the repository Wiki.
 
 Suggested starting points:
 
@@ -39,7 +39,7 @@ See the **Wiki** tab at the top of this repository.
 
 ## Reporting a Bug
 
-If you encounter a problem with Starforge WebIDE:
+If you encounter a problem with Starforge Kotar:
 
 1. Check the Wiki and existing issues to see whether the problem is already documented.
 2. Search existing GitHub Issues for similar reports.
@@ -47,7 +47,7 @@ If you encounter a problem with Starforge WebIDE:
 
 Please provide enough information to reproduce the problem, including where applicable:
 
-- Starforge WebIDE version
+- Starforge Kotar version
 - Browser and browser version
 - Operating system
 - Steps to reproduce
@@ -138,7 +138,7 @@ See [SUPPORT.md](SUPPORT.md) for additional information.
 
 Suggestions, documentation corrections, and feedback are welcome.
 
-Because Starforge WebIDE itself is proprietary software, this repository should not be interpreted as an open-source development repository for the WebIDE product.
+Because Starforge Kotar itself is proprietary software, this repository should not be interpreted as an open-source development repository for the WebIDE product.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -146,9 +146,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License and Copyright
 
-The Starforge WebIDE software is proprietary software.
+The Starforge Kotar software is proprietary software.
 
-No license to Starforge WebIDE is granted through this repository.
+No license to Starforge Kotar is granted through this repository.
 
 Documentation and other material contained in this repository are subject to the terms described in [LICENSE.md](LICENSE.md).
 
@@ -160,4 +160,4 @@ Documentation and support information in this repository are provided for inform
 
 Product functionality, interfaces, features, and documentation may change between releases.
 
-Use of Starforge WebIDE remains subject to the applicable software license agreement, terms of use, or other contractual agreement governing the software.
+Use of Starforge Kotar remains subject to the applicable software license agreement, terms of use, or other contractual agreement governing the software.
