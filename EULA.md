@@ -1,16 +1,14 @@
-# Starforge Kotar (aka WebIDE) End User License Agreement
+# Starforge Kotar End User License Agreement
 
-**Last Updated:** September 2026
+**Last Updated: September 2026**
 
-This End User License Agreement ("Agreement") is a legal agreement between you, or the organization on whose behalf you are using the software ("Customer", "you", or "your"), and **Planetary Utilities, Corp** ("Planetary Utilities", "we", "us", or "our").
+This End User License Agreement ("Agreement") is a legal agreement between you, or the organization on whose behalf you are using the software ("Customer", "you", or "your"), and Planetary Utilities, Corp ("Planetary Utilities", "we", "us", or "our").
 
-This Agreement governs your access to and use of **Starforge WebIDE**, including associated software, services, documentation, updates, and related materials made available by Planetary Utilities (collectively, the "Software").
+This Agreement governs your access to and use of Starforge Kotar ("Kotar"), including associated software, services, documentation, updates, and related materials made available by Planetary Utilities (collectively, the "Software").
 
-By installing, accessing, or using the Software, you agree to be bound by this Agreement.
+**BY CLICKING “I AGREE,” INSTALLING, ACCESSING, OR USING THE SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ AND UNDERSTOOD THIS AGREEMENT AND AGREE TO BE BOUND BY IT. IF YOU ACCESS OR USE THE SOFTWARE ON BEHALF OF AN ORGANIZATION, YOU REPRESENT THAT YOU HAVE AUTHORITY TO BIND THAT ORGANIZATION TO THIS AGREEMENT.**
 
 If you do not agree to this Agreement, do not install, access, or use the Software.
-
----
 
 ## 1. License Grant
 
@@ -19,8 +17,6 @@ Subject to your compliance with this Agreement and payment of any applicable fee
 The Software is licensed, not sold.
 
 No ownership rights in the Software are transferred to you.
-
----
 
 ## 2. Authorized Users
 
@@ -31,8 +27,6 @@ You may permit employees, contractors, consultants, or other authorized personne
 - you remain responsible for their use of the Software.
 
 You may not provide access to the Software to third parties except as expressly authorized by Planetary Utilities in writing.
-
----
 
 ## 3. License Restrictions
 
@@ -48,8 +42,6 @@ Except to the extent expressly permitted by applicable law or by Planetary Utili
 - use the Software in violation of applicable law, regulation, export-control requirement, or contractual obligation.
 
 Nothing in this Agreement restricts rights that cannot lawfully be restricted under applicable law.
-
----
 
 ## 4. Ownership and Intellectual Property
 
@@ -71,8 +63,6 @@ Planetary Utilities and its licensors retain all right, title, and interest in a
 
 Except for the limited license expressly granted under this Agreement, no rights are granted to you by implication, estoppel, or otherwise.
 
----
-
 ## 5. Customer Data and Models
 
 As between the parties, you retain ownership of the models, data, scripts, files, requirements, configurations, engineering information, and other content you create, upload, or process using the Software ("Customer Data").
@@ -89,11 +79,12 @@ You are also responsible for determining whether Customer Data is appropriate fo
 - ITAR-controlled information;
 - classified information;
 - personally identifiable information;
+- controlled unclassified information (CUI);
 - regulated data.
 
-The Software should only be used for such information where the applicable deployment, agreement, configuration, and authorization expressly permit that use.
+Unless expressly authorized in a separate written agreement and supported by the applicable deployment environment, you must not upload, process, transmit, or store classified information, ITAR-controlled technical data, controlled unclassified information (CUI), export-controlled information, or other restricted information using the Software.
 
----
+Other confidential, proprietary, personally identifiable, or regulated information should only be used with the Software where the applicable deployment, agreement, configuration, and authorization permit that use.
 
 ## 6. Feedback
 
@@ -103,8 +94,6 @@ This does not transfer ownership of your Customer Data or confidential informati
 
 Do not include confidential or proprietary Customer Data in Feedback unless separately agreed.
 
----
-
 ## 7. Open-Source and Third-Party Components
 
 The Software may include or interoperate with third-party or open-source software components.
@@ -113,9 +102,7 @@ Such components may be subject to separate license terms provided by their respe
 
 Where required, applicable third-party notices or license information will be made available with the Software or associated documentation.
 
-Those third-party licenses govern the applicable third-party components and do not change the proprietary status of Starforge WebIDE itself.
-
----
+Those third-party licenses govern the applicable third-party components and do not change the proprietary status of Starforge Kotar itself.
 
 ## 8. Updates and Changes
 
@@ -124,8 +111,6 @@ Planetary Utilities may provide updates, upgrades, patches, bug fixes, enhanceme
 Unless otherwise stated, such updates are governed by this Agreement.
 
 Planetary Utilities may modify, discontinue, or change features of the Software over time, subject to any applicable written customer agreement.
-
----
 
 ## 9. Support
 
@@ -140,17 +125,13 @@ Use of a public support repository does not create:
 - a guaranteed resolution time;
 - an obligation to implement a requested feature.
 
----
-
 ## 10. Confidentiality
 
 If either party receives confidential information from the other, that information will be handled in accordance with any applicable written confidentiality agreement between the parties.
 
-If no separate confidentiality agreement exists, each party should use reasonable care to protect confidential information received from the other from unauthorized use or disclosure.
+If no separate confidentiality agreement exists, each party will use reasonable care to protect confidential information received from the other from unauthorized use or disclosure.
 
 The Software, including non-public technical information concerning its architecture, implementation, performance, security, and internal operation, may constitute Planetary Utilities confidential information.
-
----
 
 ## 11. Security
 
@@ -167,8 +148,6 @@ You must not knowingly use the Software to introduce malicious code, compromise 
 
 Security vulnerabilities should be reported through the private reporting process identified in the applicable security policy and should not be disclosed publicly before Planetary Utilities has had a reasonable opportunity to investigate and address them.
 
----
-
 ## 12. Export Control and Sanctions
 
 You agree to comply with all applicable U.S. and international export-control, import-control, sanctions, and trade-compliance laws and regulations.
@@ -179,17 +158,13 @@ You are responsible for determining whether your use of the Software or Customer
 
 Nothing in this Agreement authorizes use of the Software for classified, ITAR-controlled, export-controlled, or other restricted information unless such use is expressly authorized under an applicable written agreement and appropriate technical environment.
 
----
-
 ## 13. U.S. Government Users
 
-The Software and related documentation are commercial computer software and commercial computer software documentation developed exclusively at private expense, except where otherwise expressly stated.
+The Software and related documentation are commercial computer software and commercial computer software documentation developed exclusively at private expense. For U.S. Government end users, the Software and related documentation are provided consistent with FAR 12.212 and, for Department of Defense acquisitions, DFARS 227.7202, as applicable.
 
 If the Software is acquired by or on behalf of the U.S. Government, use, duplication, disclosure, modification, and distribution are subject to the applicable federal acquisition regulations and the terms of the applicable government contract, order, or agreement.
 
 To the extent permitted by applicable law and regulation, the Software is provided with only those rights customarily provided to commercial customers under this Agreement or the applicable written agreement.
-
----
 
 ## 14. Evaluation, Beta, and Pre-Release Features
 
@@ -206,11 +181,11 @@ Such features may be incomplete, contain defects, change without notice, or be d
 
 Unless otherwise expressly agreed in writing, evaluation and pre-release features are provided for testing and evaluation purposes only and should not be relied upon for production, safety-critical, mission-critical, or certified engineering activities.
 
----
-
 ## 15. Engineering Responsibility
 
 Starforge Kotar provides modeling, validation, transformation, analysis, automation, and related engineering capabilities.
+
+Outputs generated by the Software may contain errors, omissions, inconsistencies, or technically incorrect results.
 
 The Software is intended to assist engineering work, not replace professional engineering judgment.
 
@@ -226,8 +201,6 @@ You remain responsible for:
 
 A successful parse, validation, transformation, query, constraint evaluation, solver result, or other automated result does not by itself establish that an engineered system is correct, complete, safe, certified, or suitable for any particular purpose.
 
----
-
 ## 16. High-Risk and Safety-Critical Use
 
 Unless expressly agreed in writing by Planetary Utilities, the Software is not designed or licensed as the sole basis for decision-making in applications where failure could reasonably be expected to result in:
@@ -241,59 +214,56 @@ Unless expressly agreed in writing by Planetary Utilities, the Software is not d
 
 You are responsible for implementing appropriate independent verification, validation, redundancy, review, and safety controls for any high-risk or safety-critical use.
 
----
-
 ## 17. Warranty Disclaimer
 
-EXCEPT TO THE EXTENT EXPRESSLY PROVIDED IN A SEPARATE WRITTEN AGREEMENT, THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE."
+**EXCEPT TO THE EXTENT EXPRESSLY PROVIDED IN A SEPARATE WRITTEN AGREEMENT, THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE."**
 
-TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, PLANETARY UTILITIES DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING WARRANTIES OF:
+**TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, PLANETARY UTILITIES DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING WARRANTIES OF:**
 
-- MERCHANTABILITY;
-- FITNESS FOR A PARTICULAR PURPOSE;
-- TITLE;
-- NON-INFRINGEMENT;
-- ACCURACY;
-- RELIABILITY;
-- AVAILABILITY;
-- ERROR-FREE OPERATION.
+- **MERCHANTABILITY;**
+- **FITNESS FOR A PARTICULAR PURPOSE;**
+- **TITLE;**
+- **NON-INFRINGEMENT;**
+- **ACCURACY;**
+- **RELIABILITY;**
+- **AVAILABILITY;**
+- **ERROR-FREE OPERATION.**
 
-PLANETARY UTILITIES DOES NOT WARRANT THAT THE SOFTWARE WILL:
+**PLANETARY UTILITIES DOES NOT WARRANT THAT THE SOFTWARE WILL:**
 
-- BE UNINTERRUPTED;
-- BE ERROR-FREE;
-- MEET ALL OF YOUR REQUIREMENTS;
-- IDENTIFY EVERY MODELING, ENGINEERING, SECURITY, OR ANALYSIS ERROR;
-- PRODUCE RESULTS SUITABLE FOR CERTIFICATION OR SAFETY-CRITICAL DECISIONS.
-
----
+- **BE UNINTERRUPTED;**
+- **BE ERROR-FREE;**
+- **MEET ALL OF YOUR REQUIREMENTS;**
+- **IDENTIFY EVERY MODELING, ENGINEERING, SECURITY, OR ANALYSIS ERROR;**
+- **PRODUCE RESULTS SUITABLE FOR CERTIFICATION OR SAFETY-CRITICAL DECISIONS.**
 
 ## 18. Limitation of Liability
 
-TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, PLANETARY UTILITIES WILL NOT BE LIABLE FOR ANY:
+**TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, PLANETARY UTILITIES WILL NOT BE LIABLE FOR ANY:**
 
-- INDIRECT;
-- INCIDENTAL;
-- SPECIAL;
-- CONSEQUENTIAL;
-- EXEMPLARY;
-- PUNITIVE DAMAGES;
-- LOSS OF PROFITS;
-- LOSS OF REVENUE;
-- LOSS OF BUSINESS;
-- LOSS OF DATA;
-- LOSS OF GOODWILL;
-- BUSINESS INTERRUPTION;
+- **INDIRECT;**
+- **INCIDENTAL;**
+- **SPECIAL;**
+- **CONSEQUENTIAL;**
+- **EXEMPLARY;**
+- **PUNITIVE DAMAGES;**
+- **LOSS OF PROFITS;**
+- **LOSS OF REVENUE;**
+- **LOSS OF BUSINESS;**
+- **LOSS, CORRUPTION, OR UNAVAILABILITY OF DATA;**
+- **LOSS OR CORRUPTION OF MODELS, ENGINEERING DATA, REQUIREMENTS, DESIGNS, OR OTHER TECHNICAL INFORMATION;**
+- **LOSS OF GOODWILL;**
+- **BUSINESS INTERRUPTION;**
 
-ARISING OUT OF OR RELATING TO THE SOFTWARE OR THIS AGREEMENT, EVEN IF PLANETARY UTILITIES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+**ARISING OUT OF OR RELATING TO THE SOFTWARE OR THIS AGREEMENT, EVEN IF PLANETARY UTILITIES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.**
 
-EXCEPT TO THE EXTENT OTHERWISE PROVIDED IN A SEPARATE WRITTEN AGREEMENT, PLANETARY UTILITIES' TOTAL AGGREGATE LIABILITY ARISING OUT OF OR RELATING TO THE SOFTWARE OR THIS AGREEMENT WILL NOT EXCEED THE AMOUNT PAID BY CUSTOMER TO PLANETARY UTILITIES FOR THE SOFTWARE DURING THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM.
+**THE FOREGOING EXCLUSIONS AND LIMITATIONS APPLY REGARDLESS OF THE THEORY OF LIABILITY, WHETHER IN CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, WARRANTY, STATUTE, OR OTHERWISE, AND EVEN IF ANY LIMITED REMEDY FAILS OF ITS ESSENTIAL PURPOSE.**
+
+**EXCEPT TO THE EXTENT OTHERWISE PROVIDED IN A SEPARATE WRITTEN AGREEMENT, PLANETARY UTILITIES' TOTAL AGGREGATE LIABILITY ARISING OUT OF OR RELATING TO THE SOFTWARE OR THIS AGREEMENT WILL NOT EXCEED THE AMOUNT PAID BY CUSTOMER TO PLANETARY UTILITIES FOR THE SOFTWARE DURING THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM.**
 
 If you received the Software without charge, Planetary Utilities' aggregate liability will not exceed one hundred U.S. dollars (US $100), except where such limitation is prohibited by law.
 
 Some jurisdictions do not allow certain limitations of liability, so some of these limitations may not apply.
-
----
 
 ## 19. Indemnification
 
@@ -305,8 +275,6 @@ To the extent permitted by law and unless otherwise provided in a separate writt
 - your use of Customer Data without necessary rights or permissions.
 
 This section does not apply to the extent prohibited by applicable law.
-
----
 
 ## 20. Term and Termination
 
@@ -326,8 +294,6 @@ Sections that by their nature should survive termination will survive, including
 - indemnification;
 - governing law.
 
----
-
 ## 21. Separate Written Agreements; Order of Precedence
 
 If a separate written agreement exists between Planetary Utilities and the Customer governing the Software, including a:
@@ -345,21 +311,19 @@ then that separate written agreement will control in the event of any conflict o
 
 This Agreement applies only to the extent that its terms are not superseded by that separate written agreement.
 
-For clarity, negotiated customer-specific terms take precedence over this standard End User License Agreement when the two are inconsistent.
+Nothing in this Agreement supersedes or modifies any mandatory provision of applicable federal law or regulation or any term of an applicable U.S. Government contract that, by law, takes precedence over this Agreement.
 
----
+For clarity, negotiated customer-specific terms take precedence over this standard End User License Agreement when the two are inconsistent.
 
 ## 22. Public Support Repository
 
 Planetary Utilities may maintain public repositories for documentation, issue tracking, user support, examples, or community interaction.
 
-Public availability of such repositories does not make Starforge WebIDE open-source software.
+Public availability of such repositories does not make Starforge Kotar open-source software.
 
-No right to copy, modify, redistribute, reverse engineer, or create derivative works of the proprietary Starforge WebIDE software is granted through a public support repository.
+No right to copy, modify, redistribute, reverse engineer, or create derivative works of the proprietary Starforge Kotar software is granted through a public support repository.
 
 Repository content may be governed by separate license or usage terms.
-
----
 
 ## 23. Privacy
 
@@ -367,15 +331,11 @@ Collection and processing of personal information associated with use of the Sof
 
 Customer is responsible for complying with applicable privacy and data-protection requirements for personal information included in Customer Data.
 
----
-
 ## 24. Governing Law
 
-Unless otherwise specified in a separate written agreement, this Agreement will be governed by the laws of the State of [STATE], United States, without regard to conflict-of-law principles.
+Unless otherwise specified in a separate written agreement, this Agreement will be governed by the laws of the State of California, United States, without regard to conflict-of-law principles.
 
-The parties agree that any dispute arising from this Agreement will be brought in the state or federal courts located in [COUNTY, STATE], except where applicable law requires otherwise.
-
----
+The parties agree that any dispute arising out of or relating to this Agreement will be brought exclusively in the state or federal courts located in Los Angeles County, California, except where applicable law requires otherwise.
 
 ## 25. Changes to this Agreement
 
@@ -383,9 +343,7 @@ Planetary Utilities may update this Agreement from time to time.
 
 Updated terms may be provided with a new Software release, through the Software, through an applicable service, or through another reasonable notice mechanism.
 
-Where required by law or contract, material changes will apply prospectively.
-
----
+Material changes to this Agreement will apply prospectively and, where appropriate, may require you to affirmatively accept the updated Agreement before continuing to use the Software.
 
 ## 26. Severability
 
@@ -393,13 +351,9 @@ If any provision of this Agreement is found unenforceable, the remaining provisi
 
 The unenforceable provision will be interpreted or modified to the minimum extent necessary to make it enforceable where permitted by law.
 
----
-
 ## 27. No Waiver
 
 Failure by Planetary Utilities to enforce any provision of this Agreement does not waive its right to enforce that provision or any other provision later.
-
----
 
 ## 28. Assignment
 
@@ -407,21 +361,17 @@ You may not assign or transfer this Agreement or your rights under it without pr
 
 Planetary Utilities may assign this Agreement in connection with a merger, acquisition, corporate restructuring, or sale of substantially all relevant assets.
 
----
-
 ## 29. Entire Agreement
 
 Except for any separate written agreement that controls under Section 21, this Agreement constitutes the entire agreement between you and Planetary Utilities regarding the Software and supersedes prior or contemporaneous communications regarding the subject matter of this Agreement.
-
----
 
 ## 30. Contact
 
 Questions regarding this Agreement may be directed to:
 
-**Planetary Utilities, Corp**  
-[CA 91016, Monrovia]  
-[office planetaryutilities.com]  
-[https://www.planetaryutilities.com]
+Planetary Utilities, Corp  
+Monrovia, California 91016  
+info@planetaryutilities.com  
+https://www.planetaryutilities.com
 
-Security vulnerabilities should be reported through the process described in the applicable Starforge security policy and not through public GitHub Issues.
+Security vulnerabilities should be reported privately to Planetary Utilities at info@planetaryutilities.com and not through public GitHub Issues.
