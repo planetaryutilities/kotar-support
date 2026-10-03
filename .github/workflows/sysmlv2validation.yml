@@ -1,0 +1,1042 @@
+name: Validate and Evaluate SysML v2 Examples
+
+on:
+  push:
+    paths:
+      - "examples/**/*.sysml"
+      - ".github/workflows/sysml2validation.yml"
+
+  pull_request:
+    paths:
+      - "examples/**/*.sysml"
+      - ".github/workflows/sysml2validation.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-evaluate-sysml:
+    runs-on: ubuntu-latest
+
+    env:
+      SYSML_TOOLKIT_VERSION: v0.9.1
+      SYSML_RELEASE_VERSION: "2026-08"
+
+    steps:
+      # ------------------------------------------------------------
+      # Checkout the branch that triggered the workflow
+      # ------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Show source revision
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Repository: ${GITHUB_REPOSITORY}"
+          echo "Branch:     ${{ github.head_ref || github.ref_name }}"
+          echo "Commit:     $(git rev-parse HEAD)"
+
+      # ------------------------------------------------------------
+      # Install released sysml-toolkit binary
+      # ------------------------------------------------------------
+      - name: Install sysml-toolkit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          RELEASE_API="https://api.github.com/repos/Open-MBEE/sysml-toolkit/releases/tags/${SYSML_TOOLKIT_VERSION}"
+          RELEASE_JSON="${RUNNER_TEMP}/sysml-toolkit-release.json"
+
+          curl -fsSL \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${RELEASE_API}" \
+            -o "${RELEASE_JSON}"
+
+          mapfile -t ASSET_INFO < <(
+            python3 - "${RELEASE_JSON}" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as f:
+              release = json.load(f)
+
+          candidates = []
+
+          for asset in release.get("assets", []):
+              name = asset["name"]
+              lower = name.lower()
+
+              if "linux" not in lower:
+                  continue
+
+              if not any(
+                  arch in lower
+                  for arch in ("x86_64", "amd64", "x64")
+              ):
+                  continue
+
+              if any(
+                  x in lower
+                  for x in ("sha256", "checksum", ".sig", ".asc")
+              ):
+                  continue
+
+              score = 0
+
+              if "sysmlv2" in lower:
+                  score += 100
+
+              if lower.endswith(
+                  (".tar.gz", ".tgz", ".tar.xz", ".zip")
+              ):
+                  score += 50
+
+              if "musl" in lower:
+                  score += 10
+
+              candidates.append(
+                  (
+                      score,
+                      name,
+                      asset["browser_download_url"],
+                  )
+              )
+
+          if not candidates:
+              print(
+                  "No Linux x86-64 sysml-toolkit asset found",
+                  file=sys.stderr,
+              )
+
+              for asset in release.get("assets", []):
+                  print(asset["name"], file=sys.stderr)
+
+              sys.exit(1)
+
+          candidates.sort(reverse=True)
+
+          _, name, url = candidates[0]
+
+          print(name)
+          print(url)
+          PY
+          )
+
+          ASSET_NAME="${ASSET_INFO[0]}"
+          ASSET_URL="${ASSET_INFO[1]}"
+
+          echo "Downloading ${ASSET_NAME}"
+
+          ASSET_PATH="${RUNNER_TEMP}/${ASSET_NAME}"
+          EXTRACT_DIR="${RUNNER_TEMP}/sysml-toolkit"
+          BIN_DIR="${RUNNER_TEMP}/bin"
+
+          mkdir -p "${EXTRACT_DIR}" "${BIN_DIR}"
+
+          curl -fL \
+            --retry 3 \
+            -o "${ASSET_PATH}" \
+            "${ASSET_URL}"
+
+          case "${ASSET_NAME}" in
+            *.tar.gz|*.tgz)
+              tar -xzf "${ASSET_PATH}" \
+                -C "${EXTRACT_DIR}"
+              ;;
+
+            *.tar.xz)
+              tar -xJf "${ASSET_PATH}" \
+                -C "${EXTRACT_DIR}"
+              ;;
+
+            *.zip)
+              unzip -q "${ASSET_PATH}" \
+                -d "${EXTRACT_DIR}"
+              ;;
+
+            *)
+              cp "${ASSET_PATH}" \
+                "${EXTRACT_DIR}/sysmlv2"
+
+              chmod +x \
+                "${EXTRACT_DIR}/sysmlv2"
+              ;;
+          esac
+
+          SYSMLV2_BIN="$(
+            find "${EXTRACT_DIR}" \
+              -type f \
+              -name sysmlv2 \
+              -print \
+              -quit
+          )"
+
+          if [[ -z "${SYSMLV2_BIN}" ]]; then
+            echo "::error::sysmlv2 executable not found"
+
+            find "${EXTRACT_DIR}" \
+              -type f \
+              -print
+
+            exit 1
+          fi
+
+          install \
+            -m 0755 \
+            "${SYSMLV2_BIN}" \
+            "${BIN_DIR}/sysmlv2"
+
+          echo "${BIN_DIR}" \
+            >> "${GITHUB_PATH}"
+
+      - name: Show sysml-toolkit version
+        run: sysmlv2 --version
+
+      # ------------------------------------------------------------
+      # Get OMG SysML v2 standard library
+      # ------------------------------------------------------------
+      - name: Clone SysML v2 standard library
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LIB_REPO="${RUNNER_TEMP}/SysML-v2-Release"
+
+          git clone \
+            --depth 1 \
+            --branch "${SYSML_RELEASE_VERSION}" \
+            https://github.com/Systems-Modeling/SysML-v2-Release.git \
+            "${LIB_REPO}"
+
+          SYSML_LIB_DIR="${LIB_REPO}/sysml.library"
+
+          if [[ ! -d "${SYSML_LIB_DIR}" ]]; then
+            echo "::error::sysml.library not found"
+            exit 1
+          fi
+
+          echo "SYSML_LIB_DIR=${SYSML_LIB_DIR}" \
+            >> "${GITHUB_ENV}"
+
+      # ------------------------------------------------------------
+      # Discover SysML files in examples/
+      # ------------------------------------------------------------
+      - name: Discover SysML example files
+        id: files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXAMPLES_DIR="${GITHUB_WORKSPACE}/examples"
+
+          if [[ ! -d "${EXAMPLES_DIR}" ]]; then
+            echo "::error::examples directory not found"
+            exit 1
+          fi
+
+          mkdir -p \
+            reports/results
+
+          find "${EXAMPLES_DIR}" \
+            -type f \
+            -name '*.sysml' \
+            -print0 \
+            | sort -z \
+            > "${RUNNER_TEMP}/sysml-files.bin"
+
+          mapfile -d '' -t FILES \
+            < "${RUNNER_TEMP}/sysml-files.bin"
+
+          if [[ "${#FILES[@]}" -eq 0 ]]; then
+            echo "::error::No .sysml files found under examples/"
+            exit 1
+          fi
+
+          echo "Found ${#FILES[@]} SysML files"
+
+          # Sanity check: every discovered model must be below examples/.
+          for file in "${FILES[@]}"; do
+            case "${file}" in
+              "${EXAMPLES_DIR}"/*)
+                ;;
+              *)
+                echo "::error::Unexpected model input: ${file}"
+                exit 1
+                ;;
+            esac
+          done
+
+          printf '%s\n' \
+            "${FILES[@]#${GITHUB_WORKSPACE}/}" \
+            | tee reports/model-files.txt
+
+          echo "count=${#FILES[@]}" \
+            >> "${GITHUB_OUTPUT}"
+
+      # ------------------------------------------------------------
+      # Validate and evaluate every model individually
+      # ------------------------------------------------------------
+      - name: Validate and evaluate SysML models
+        id: model_checks
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          mapfile -d '' -t FILES \
+            < "${RUNNER_TEMP}/sysml-files.bin"
+
+          RESULTS_FILE="${RUNNER_TEMP}/model-results.tsv"
+
+          : > "${RESULTS_FILE}"
+
+          ANY_FAILED=0
+          INDEX=0
+
+          for file in "${FILES[@]}"; do
+            INDEX=$((INDEX + 1))
+
+            relative="${file#${GITHUB_WORKSPACE}/}"
+
+            safe_name="$(
+              printf '%s' "${relative}" \
+                | sed 's#[^A-Za-z0-9._-]#_#g'
+            )"
+
+            validation_json="reports/results/${safe_name}.validation.json"
+            validation_stderr="reports/results/${safe_name}.validation.stderr"
+
+            evaluation_txt="reports/results/${safe_name}.evaluation.txt"
+            evaluation_stderr="reports/results/${safe_name}.evaluation.stderr"
+
+            echo
+            echo "============================================================"
+            echo "[${INDEX}/${#FILES[@]}] ${relative}"
+            echo "============================================================"
+
+            # --------------------------------------------------------
+            # Validation
+            # --------------------------------------------------------
+            echo
+            echo "Validating ${relative}..."
+
+            set +e
+
+            sysmlv2 check \
+              --format json \
+              --lib "${SYSML_LIB_DIR}" \
+              "${file}" \
+              > "${validation_json}" \
+              2> "${validation_stderr}"
+
+            validation_status=$?
+
+            set -e
+
+            if [[ "${validation_status}" -eq 0 ]]; then
+              echo "✅ Validation passed"
+            else
+              echo "❌ Validation failed"
+              ANY_FAILED=1
+            fi
+
+            # --------------------------------------------------------
+            # Evaluation
+            # --------------------------------------------------------
+            echo
+            echo "Evaluating ${relative}..."
+
+            set +e
+
+            sysmlv2 eval \
+              --lib "${SYSML_LIB_DIR}" \
+              "${file}" \
+              --all \
+              > "${evaluation_txt}" \
+              2> "${evaluation_stderr}"
+
+            evaluation_status=$?
+
+            set -e
+
+            if [[ "${evaluation_status}" -eq 0 ]]; then
+              echo "✅ Evaluation passed"
+            else
+              echo "❌ Evaluation failed"
+              ANY_FAILED=1
+            fi
+
+            # --------------------------------------------------------
+            # Record result
+            # --------------------------------------------------------
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+              "${relative}" \
+              "${validation_status}" \
+              "${evaluation_status}" \
+              "${validation_json}" \
+              "${validation_stderr}" \
+              "${evaluation_txt}" \
+              "${evaluation_stderr}" \
+              >> "${RESULTS_FILE}"
+          done
+
+          echo "results_file=${RESULTS_FILE}" \
+            >> "${GITHUB_OUTPUT}"
+
+          echo "status=${ANY_FAILED}" \
+            >> "${GITHUB_OUTPUT}"
+
+          # Do not fail here.
+          # The report must still be generated for every model.
+          exit 0
+
+      # ------------------------------------------------------------
+      # Generate GitHub report
+      # ------------------------------------------------------------
+      - name: Generate validation and evaluation report
+        if: always()
+        shell: bash
+        env:
+          FILE_COUNT: ${{ steps.files.outputs.count }}
+          MODEL_CHECK_STATUS: ${{ steps.model_checks.outputs.status }}
+          RESULTS_FILE: ${{ steps.model_checks.outputs.results_file }}
+          SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+
+          # ----------------------------------------------------------
+          # Helpers
+          # ----------------------------------------------------------
+
+          def esc(value):
+              """Escape text for a GitHub Markdown table."""
+              if value is None:
+                  return ""
+
+              return (
+                  str(value)
+                  .replace("|", "\\|")
+                  .replace("\r", " ")
+                  .replace("\n", "<br>")
+              )
+
+
+          def read_validation_findings(filename):
+              path = Path(filename)
+
+              if not path.exists():
+                  return []
+
+              raw = path.read_text(
+                  encoding="utf-8",
+                  errors="replace",
+              ).strip()
+
+              if not raw:
+                  return []
+
+              try:
+                  data = json.loads(raw)
+              except json.JSONDecodeError:
+                  return []
+
+              if isinstance(data, list):
+                  return data
+
+              if isinstance(data, dict):
+                  return (
+                      data.get("findings")
+                      or data.get("diagnostics")
+                      or data.get("results")
+                      or []
+                  )
+
+              return []
+
+
+          def read_evaluation_rows(filename):
+              path = Path(filename)
+
+              if not path.exists():
+                  return []
+
+              text = path.read_text(
+                  encoding="utf-8",
+                  errors="replace",
+              )
+
+              rows = []
+
+              for line in text.splitlines():
+                  line = line.strip()
+
+                  if not line:
+                      continue
+
+                  # Expected form:
+                  #
+                  # Package::feature = value
+                  #
+                  # Split only on the first "=" so values containing
+                  # "=" remain intact.
+                  match = re.match(
+                      r"^(.*?)\s*=\s*(.*)$",
+                      line,
+                  )
+
+                  if match:
+                      rows.append(
+                          (
+                              match.group(1).strip(),
+                              match.group(2).strip(),
+                          )
+                      )
+                  else:
+                      # Preserve unexpected output instead of hiding it.
+                      rows.append(
+                          (
+                              line,
+                              "",
+                          )
+                      )
+
+              return rows
+
+
+          def read_stderr(filename):
+              path = Path(filename)
+
+              if not path.exists():
+                  return ""
+
+              return path.read_text(
+                  encoding="utf-8",
+                  errors="replace",
+              ).strip()
+
+
+          # ----------------------------------------------------------
+          # Load per-model results
+          # ----------------------------------------------------------
+
+          results_file_value = os.environ.get(
+              "RESULTS_FILE",
+              "",
+          )
+
+          results_file = (
+              Path(results_file_value)
+              if results_file_value
+              else None
+          )
+
+          models = []
+
+          if results_file and results_file.exists():
+              for line in results_file.read_text(
+                  encoding="utf-8",
+                  errors="replace",
+              ).splitlines():
+
+                  if not line.strip():
+                      continue
+
+                  (
+                      filename,
+                      validation_status,
+                      evaluation_status,
+                      validation_json,
+                      validation_stderr,
+                      evaluation_file,
+                      evaluation_stderr,
+                  ) = line.split("\t", 6)
+
+                  models.append(
+                      {
+                          "file": filename,
+                          "validation_status": int(validation_status),
+                          "evaluation_status": int(evaluation_status),
+                          "validation_findings":
+                              read_validation_findings(
+                                  validation_json
+                              ),
+                          "validation_stderr":
+                              read_stderr(
+                                  validation_stderr
+                              ),
+                          "evaluation_rows":
+                              read_evaluation_rows(
+                                  evaluation_file
+                              ),
+                          "evaluation_stderr":
+                              read_stderr(
+                                  evaluation_stderr
+                              ),
+                      }
+                  )
+
+
+          # ----------------------------------------------------------
+          # Summary counts
+          # ----------------------------------------------------------
+
+          validation_passed = sum(
+              1
+              for model in models
+              if model["validation_status"] == 0
+          )
+
+          validation_failed = (
+              len(models) - validation_passed
+          )
+
+          evaluation_passed = sum(
+              1
+              for model in models
+              if model["evaluation_status"] == 0
+          )
+
+          evaluation_failed = (
+              len(models) - evaluation_passed
+          )
+
+          fully_passed = sum(
+              1
+              for model in models
+              if (
+                  model["validation_status"] == 0
+                  and model["evaluation_status"] == 0
+              )
+          )
+
+          failed_models = (
+              len(models) - fully_passed
+          )
+
+
+          # ----------------------------------------------------------
+          # Report header
+          # ----------------------------------------------------------
+
+          report = []
+
+          report.append(
+              "# SysML v2 Example Validation and Evaluation"
+          )
+
+          report.append("")
+
+          report.append(
+              f"**Repository:** "
+              f"`{os.environ.get('GITHUB_REPOSITORY', '')}`  "
+          )
+
+          report.append(
+              f"**Branch:** "
+              f"`{os.environ.get('SOURCE_BRANCH', '')}`  "
+          )
+
+          report.append(
+              f"**Commit:** "
+              f"`{os.environ.get('GITHUB_SHA', '')}`  "
+          )
+
+          report.append(
+              f"**sysml-toolkit:** "
+              f"`{os.environ.get('SYSML_TOOLKIT_VERSION', '')}`  "
+          )
+
+          report.append(
+              f"**SysML library:** "
+              f"`{os.environ.get('SYSML_RELEASE_VERSION', '')}`"
+          )
+
+
+          # ----------------------------------------------------------
+          # Overall summary
+          # ----------------------------------------------------------
+
+          report.append("")
+          report.append("## Summary")
+          report.append("")
+
+          report.append(
+              "| Check | Passed | Failed | Total |"
+          )
+
+          report.append(
+              "|---|---:|---:|---:|"
+          )
+
+          report.append(
+              f"| Validation "
+              f"| {validation_passed} "
+              f"| {validation_failed} "
+              f"| {len(models)} |"
+          )
+
+          report.append(
+              f"| Evaluation "
+              f"| {evaluation_passed} "
+              f"| {evaluation_failed} "
+              f"| {len(models)} |"
+          )
+
+          report.append(
+              f"| Both "
+              f"| {fully_passed} "
+              f"| {failed_models} "
+              f"| {len(models)} |"
+          )
+
+
+          # ----------------------------------------------------------
+          # Model overview
+          # ----------------------------------------------------------
+
+          report.append("")
+          report.append("## Models")
+          report.append("")
+
+          report.append(
+              "| Model | Validation | Evaluation | Findings | Values |"
+          )
+
+          report.append(
+              "|---|---|---|---:|---:|"
+          )
+
+          for model in models:
+              validation_result = (
+                  "✅ Passed"
+                  if model["validation_status"] == 0
+                  else "❌ Failed"
+              )
+
+              evaluation_result = (
+                  "✅ Passed"
+                  if model["evaluation_status"] == 0
+                  else "❌ Failed"
+              )
+
+              report.append(
+                  f"| `{esc(model['file'])}` "
+                  f"| {validation_result} "
+                  f"| {evaluation_result} "
+                  f"| {len(model['validation_findings'])} "
+                  f"| {len(model['evaluation_rows'])} |"
+              )
+
+
+          # ----------------------------------------------------------
+          # Per-model details
+          # ----------------------------------------------------------
+
+          for model in models:
+              report.append("")
+              report.append("---")
+              report.append("")
+              report.append(
+                  f"## `{model['file']}`"
+              )
+
+
+              # ------------------------------------------------------
+              # Validation
+              # ------------------------------------------------------
+
+              report.append("")
+              report.append("### Validation")
+              report.append("")
+
+              if model["validation_status"] == 0:
+                  report.append(
+                      "✅ Validation passed."
+                  )
+              else:
+                  report.append(
+                      "❌ Validation failed."
+                  )
+
+              findings = model["validation_findings"]
+
+              if findings:
+                  report.append("")
+
+                  report.append(
+                      "| Severity | Stage | Location | Message |"
+                  )
+
+                  report.append(
+                      "|---|---|---:|---|"
+                  )
+
+                  for finding in findings:
+                      severity = (
+                          finding.get("severity")
+                          or finding.get("level")
+                          or ""
+                      )
+
+                      stage = (
+                          finding.get("stage")
+                          or finding.get("phase")
+                          or ""
+                      )
+
+                      line = (
+                          finding.get("line")
+                          or ""
+                      )
+
+                      col = (
+                          finding.get("col")
+                          or finding.get("column")
+                          or ""
+                      )
+
+                      location = (
+                          str(line)
+                          if line
+                          else ""
+                      )
+
+                      if location and col:
+                          location += f":{col}"
+
+                      message = (
+                          finding.get("message")
+                          or finding.get("description")
+                          or ""
+                      )
+
+                      severity_lower = (
+                          str(severity).lower()
+                      )
+
+                      if severity_lower == "error":
+                          severity = "❌ Error"
+
+                      elif severity_lower in (
+                          "warning",
+                          "warn",
+                      ):
+                          severity = "⚠️ Warning"
+
+                      elif severity_lower == "info":
+                          severity = "ℹ️ Info"
+
+                      elif severity_lower == "hint":
+                          severity = "💡 Hint"
+
+                      report.append(
+                          f"| {esc(severity)} "
+                          f"| {esc(stage)} "
+                          f"| {esc(location)} "
+                          f"| {esc(message)} |"
+                      )
+
+              elif model["validation_status"] == 0:
+                  report.append("")
+                  report.append(
+                      "No validation findings."
+                  )
+
+              else:
+                  report.append("")
+                  report.append(
+                      "No structured validation findings were returned."
+                  )
+
+              if model["validation_stderr"]:
+                  report.append("")
+                  report.append(
+                      "<details>"
+                  )
+
+                  report.append(
+                      "<summary>Validation stderr</summary>"
+                  )
+
+                  report.append("")
+                  report.append("```text")
+
+                  report.append(
+                      model["validation_stderr"]
+                  )
+
+                  report.append("```")
+                  report.append("")
+                  report.append("</details>")
+
+
+              # ------------------------------------------------------
+              # Evaluation
+              # ------------------------------------------------------
+
+              report.append("")
+              report.append("### Evaluation")
+              report.append("")
+
+              if model["evaluation_status"] == 0:
+                  report.append(
+                      "✅ Evaluation passed."
+                  )
+              else:
+                  report.append(
+                      "❌ Evaluation failed."
+                  )
+
+              evaluation_rows = (
+                  model["evaluation_rows"]
+              )
+
+              if evaluation_rows:
+                  report.append("")
+
+                  report.append(
+                      "| Feature / Expression | Value |"
+                  )
+
+                  report.append(
+                      "|---|---|"
+                  )
+
+                  for feature, value in evaluation_rows:
+                      report.append(
+                          f"| `{esc(feature)}` "
+                          f"| `{esc(value)}` |"
+                      )
+
+              elif model["evaluation_status"] == 0:
+                  report.append("")
+                  report.append(
+                      "Evaluation completed successfully, "
+                      "but no evaluated values were returned."
+                  )
+
+              else:
+                  report.append("")
+                  report.append(
+                      "Evaluation failed before producing values."
+                  )
+
+              if model["evaluation_stderr"]:
+                  report.append("")
+                  report.append(
+                      "<details>"
+                  )
+
+                  report.append(
+                      "<summary>Evaluation stderr</summary>"
+                  )
+
+                  report.append("")
+                  report.append("```text")
+
+                  report.append(
+                      model["evaluation_stderr"]
+                  )
+
+                  report.append("```")
+                  report.append("")
+                  report.append("</details>")
+
+
+          # ----------------------------------------------------------
+          # Final summary
+          # ----------------------------------------------------------
+
+          report.append("")
+          report.append("---")
+          report.append("")
+
+          if failed_models == 0:
+              report.append(
+                  "✅ All SysML models passed validation and evaluation."
+              )
+          else:
+              report.append(
+                  f"❌ {failed_models} of {len(models)} model(s) "
+                  "failed validation or evaluation."
+              )
+
+          report.append("")
+
+          report_text = "\n".join(report) + "\n"
+
+          report_file = Path(
+              "reports/report.md"
+          )
+
+          report_file.write_text(
+              report_text,
+              encoding="utf-8",
+          )
+
+          summary_file = os.environ.get(
+              "GITHUB_STEP_SUMMARY"
+          )
+
+          if summary_file:
+              with open(
+                  summary_file,
+                  "a",
+                  encoding="utf-8",
+              ) as f:
+                  f.write(report_text)
+
+          print(report_text)
+
+          PY
+
+      # ------------------------------------------------------------
+      # Upload complete report and raw command output
+      # ------------------------------------------------------------
+      - name: Upload validation and evaluation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sysml-examples-validation-evaluation
+          path: reports/
+          retention-days: 30
+
+      # ------------------------------------------------------------
+      # Final gate
+      #
+      # This intentionally occurs after report generation so that
+      # every .sysml model is checked even when earlier models fail.
+      # ------------------------------------------------------------
+      - name: Enforce model results
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          STATUS="${{ steps.model_checks.outputs.status }}"
+
+          if [[ -z "${STATUS}" ]]; then
+            echo "::error::Model checks did not complete"
+            exit 1
+          fi
+
+          if [[ "${STATUS}" != "0" ]]; then
+            echo "::error::One or more SysML models failed validation or evaluation"
+            exit 1
+          fi
+
+          echo "All SysML models passed validation and evaluation."
