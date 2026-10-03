@@ -70,14 +70,12 @@ part def CrawlerContext {
     }
 
     part analysisContext {
-        // this is not evaluated
         analysis massAnalysisT : VehicleMassAnalysis {
             subject :>> crawler :> tinycrawler;
             in requirement massRequirement = maxRequiredMass {
             subject :>> crawler :> tinycrawler;
             }
         }
-        // this is not evaluated
         analysis massAnalysisM : VehicleMassAnalysis {
             subject :>> crawler :> medcrawler;
             in requirement massRequirement = maxRequiredMass {
@@ -90,12 +88,9 @@ part def CrawlerContext {
         }
 
         part medcrawlerAnalyzed :> medcrawler {
-            // this throws a validation error although it should be equivalent to tinycrawlerAnalyzed redefinition
-            // Cannot override an inherited binding value; the redefined value must be default [validateFeatureValueOverriding]
             attribute :>> vehicleMass  = massAnalysisM.calculatedMass;
         }
 
-        // This is not evaluated
         satisfy maxRequiredMass by tinycrawlerAnalyzed;
         satisfy requirement : MaxRequiredMass by tinycrawlerAnalyzed;
         }
