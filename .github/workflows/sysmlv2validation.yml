@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SYSML_TOOLKIT_VERSION: v0.9.1
-      SYSML_RELEASE_VERSION: "2026-08"
+      SYSML_TOOLKIT_VERSION: v0.10.0
+      SYSML_RELEASE_VERSION: "2026-10"
 
     steps:
       # ------------------------------------------------------------
