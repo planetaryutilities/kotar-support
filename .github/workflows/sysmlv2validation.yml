@@ -22,7 +22,7 @@ jobs:
 
     env:
       SYSML_TOOLKIT_VERSION: v0.10.0
-      SYSML_RELEASE_VERSION: "2026-10"
+      SYSML_RELEASE_VERSION: "2026-08"
 
     steps:
       # ------------------------------------------------------------
