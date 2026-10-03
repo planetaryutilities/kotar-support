@@ -360,7 +360,6 @@ jobs:
             sysmlv2 eval \
               --lib "${SYSML_LIB_DIR}" \
               "${file}" \
-              --all \
               > "${evaluation_txt}" \
               2> "${evaluation_stderr}"
 
