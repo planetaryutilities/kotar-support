@@ -4,12 +4,12 @@ on:
   push:
     paths:
       - "examples/**/*.sysml"
-      - ".github/workflows/validate-sysml.yml"
+      - ".github/workflows/sysml2validation.yml"
 
   pull_request:
     paths:
       - "examples/**/*.sysml"
-      - ".github/workflows/validate-sysml.yml"
+      - ".github/workflows/sysml2validation.yml"
 
   workflow_dispatch:
 
