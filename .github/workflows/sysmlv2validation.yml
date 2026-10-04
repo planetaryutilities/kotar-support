@@ -286,7 +286,10 @@ jobs:
       # ------------------------------------------------------------
       # Validate and evaluate every model individually
       # ------------------------------------------------------------
-      - name: Validate and evaluate SysML models
+      # ------------------------------------------------------------
+      # Validate, evaluate, and verify every model individually
+      # ------------------------------------------------------------
+      - name: Validate, evaluate, and verify SysML models
         id: model_checks
         shell: bash
         run: |
@@ -318,10 +321,45 @@ jobs:
             evaluation_txt="reports/results/${safe_name}.evaluation.txt"
             evaluation_stderr="reports/results/${safe_name}.evaluation.stderr"
 
+            verification_txt="reports/results/${safe_name}.verification.txt"
+            verification_stderr="reports/results/${safe_name}.verification.stderr"
+
+            model_index_json="reports/results/${safe_name}.model-index.json"
+            model_index_stderr="reports/results/${safe_name}.model-index.stderr"
+
             echo
             echo "============================================================"
             echo "[${INDEX}/${#FILES[@]}] ${relative}"
             echo "============================================================"
+
+            # --------------------------------------------------------
+            # Build model index
+            #
+            # compact-json contains the qualified names of elements
+            # declared by this input model. We use those names later
+            # to distinguish model evaluations from stdlib results.
+            # --------------------------------------------------------
+            echo
+            echo "Indexing model elements..."
+
+            set +e
+
+            sysmlv2 convert \
+              "${file}" \
+              --to compact-json \
+              --lib "${SYSML_LIB_DIR}" \
+              > "${model_index_json}" \
+              2> "${model_index_stderr}"
+
+            model_index_status=$?
+
+            set -e
+
+            if [[ "${model_index_status}" -eq 0 ]]; then
+              echo "✅ Model index generated"
+            else
+              echo "⚠️ Model index could not be generated"
+            fi
 
             # --------------------------------------------------------
             # Validation
@@ -351,6 +389,9 @@ jobs:
 
             # --------------------------------------------------------
             # Evaluation
+            #
+            # Keep --all. The reporting step filters/classifies the
+            # results against the model's own qualified names.
             # --------------------------------------------------------
             echo
             echo "Evaluating ${relative}..."
@@ -376,16 +417,45 @@ jobs:
             fi
 
             # --------------------------------------------------------
+            # Verification
+            # --------------------------------------------------------
+            echo
+            echo "Verifying ${relative}..."
+
+            set +e
+
+            sysmlv2 verify \
+              --lib "${SYSML_LIB_DIR}" \
+              "${file}" \
+              > "${verification_txt}" \
+              2> "${verification_stderr}"
+
+            verification_status=$?
+
+            set -e
+
+            if [[ "${verification_status}" -eq 0 ]]; then
+              echo "✅ Verification completed"
+            else
+              echo "❌ Verification failed"
+              ANY_FAILED=1
+            fi
+
+            # --------------------------------------------------------
             # Record result
             # --------------------------------------------------------
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
               "${relative}" \
               "${validation_status}" \
               "${evaluation_status}" \
+              "${verification_status}" \
               "${validation_json}" \
               "${validation_stderr}" \
               "${evaluation_txt}" \
               "${evaluation_stderr}" \
+              "${verification_txt}" \
+              "${verification_stderr}" \
+              "${model_index_json}" \
               >> "${RESULTS_FILE}"
           done
 
@@ -395,10 +465,8 @@ jobs:
           echo "status=${ANY_FAILED}" \
             >> "${GITHUB_OUTPUT}"
 
-          # Do not fail here.
-          # The report must still be generated for every model.
+          # Generate the complete report before failing the job.
           exit 0
-
       # ------------------------------------------------------------
       # Generate GitHub report
       # ------------------------------------------------------------
