@@ -536,7 +536,99 @@ jobs:
               return []
 
 
-          def read_evaluation_rows(filename):
+          def read_model_qnames(filename):
+              path = Path(filename)
+
+              if not path.exists():
+                  return set()
+
+              raw = path.read_text(
+                  encoding="utf-8",
+                  errors="replace",
+              ).strip()
+
+              if not raw:
+                  return set()
+
+              try:
+                  data = json.loads(raw)
+              except json.JSONDecodeError:
+                  return set()
+
+              if isinstance(data, dict):
+                  data = (
+                      data.get("elements")
+                      or data.get("payload")
+                      or data.get("data")
+                      or []
+                  )
+
+              if not isinstance(data, list):
+                  return set()
+
+              qnames = set()
+
+              for element in data:
+                  if not isinstance(element, dict):
+                      continue
+
+                  qname = (
+                      element.get("qualifiedName")
+                      or element.get("qualified_name")
+                  )
+
+                  if isinstance(qname, str) and qname.strip():
+                      qnames.add(qname.strip())
+
+              return qnames
+
+
+          def qualify_eval_subject(subject, model_qnames):
+              """
+              Resolve an eval output name to a model FQN where possible
+              and classify its origin.
+              """
+              subject = subject.strip()
+
+              if not subject:
+                  return subject, "Unknown"
+
+              # Already an exact model FQN.
+              if subject in model_qnames:
+                  return subject, "Model"
+
+              # Sometimes additional text follows the expression name.
+              token = subject.split()[0]
+
+              if token in model_qnames:
+                  return token, "Model"
+
+              # Try turning a short eval name into a unique model FQN.
+              candidates = sorted(
+                  qname
+                  for qname in model_qnames
+                  if (
+                      qname == subject
+                      or qname.endswith("::" + subject)
+                      or qname.endswith("::" + token)
+                  )
+              )
+
+              if len(candidates) == 1:
+                  return candidates[0], "Model"
+
+              if len(candidates) > 1:
+                  return subject, "Model (ambiguous FQN)"
+
+              # A qualified name that isn't part of the model index is
+              # normally coming from the stdlib / inherited context.
+              if "::" in subject:
+                  return subject, "Library / external context"
+
+              return subject, "Unknown"
+
+
+          def read_evaluation_rows(filename, model_qnames):
               path = Path(filename)
 
               if not path.exists():
@@ -555,35 +647,91 @@ jobs:
                   if not line:
                       continue
 
-                  # Expected form:
-                  #
-                  # Package::feature = value
-                  #
-                  # Split only on the first "=" so values containing
-                  # "=" remain intact.
                   match = re.match(
                       r"^(.*?)\s*=\s*(.*)$",
                       line,
                   )
 
                   if match:
-                      rows.append(
-                          (
-                              match.group(1).strip(),
-                              match.group(2).strip(),
-                          )
-                      )
+                      subject = match.group(1).strip()
+                      value = match.group(2).strip()
                   else:
-                      # Preserve unexpected output instead of hiding it.
-                      rows.append(
-                          (
-                              line,
-                              "",
-                          )
-                      )
+                      subject = line
+                      value = ""
+
+                  fqn, origin = qualify_eval_subject(
+                      subject,
+                      model_qnames,
+                  )
+
+                  rows.append(
+                      {
+                          "subject": subject,
+                          "fqn": fqn,
+                          "origin": origin,
+                          "value": value,
+                      }
+                  )
 
               return rows
 
+
+          def read_verification_rows(filename):
+              path = Path(filename)
+
+              if not path.exists():
+                  return []
+
+              text = path.read_text(
+                  encoding="utf-8",
+                  errors="replace",
+              )
+
+              rows = []
+
+              verdict_re = re.compile(
+                  r"\b(satisfied|violated|undecided)\b",
+                  re.IGNORECASE,
+              )
+
+              for line in text.splitlines():
+                  line = line.strip()
+
+                  if not line:
+                      continue
+
+                  match = verdict_re.search(line)
+
+                  if match:
+                      subject = line[:match.start()].strip(
+                          " \t:=->"
+                      )
+
+                      verdict = match.group(1).lower()
+
+                      detail = line[match.end():].strip(
+                          " \t:=->"
+                      )
+
+                      rows.append(
+                          {
+                              "subject": subject or line,
+                              "verdict": verdict,
+                              "detail": detail,
+                          }
+                      )
+
+                  else:
+                      # Keep unexpected CLI output visible.
+                      rows.append(
+                          {
+                              "subject": line,
+                              "verdict": "",
+                              "detail": "",
+                          }
+                      )
+
+              return rows
 
           def read_stderr(filename):
               path = Path(filename)
