@@ -1,4 +1,4 @@
-name: Validate and Evaluate SysML v2 Examples
+name: Validate, Evaluate, and Verify SysML v2 Examples
 
 on:
   push:
@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 jobs:
-  validate-and-evaluate-sysml:
+  validate-evaluate-verify-sysml:
     runs-on: ubuntu-latest
 
     env:
@@ -26,7 +26,7 @@ jobs:
 
     steps:
       # ------------------------------------------------------------
-      # Checkout the branch that triggered the workflow
+      # Checkout the exact commit that triggered the workflow
       # ------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -141,7 +141,9 @@ jobs:
           EXTRACT_DIR="${RUNNER_TEMP}/sysml-toolkit"
           BIN_DIR="${RUNNER_TEMP}/bin"
 
-          mkdir -p "${EXTRACT_DIR}" "${BIN_DIR}"
+          mkdir -p \
+            "${EXTRACT_DIR}" \
+            "${BIN_DIR}"
 
           curl -fL \
             --retry 3 \
@@ -264,7 +266,6 @@ jobs:
 
           echo "Found ${#FILES[@]} SysML files"
 
-          # Sanity check: every discovered model must be below examples/.
           for file in "${FILES[@]}"; do
             case "${file}" in
               "${EXAMPLES_DIR}"/*)
@@ -284,10 +285,7 @@ jobs:
             >> "${GITHUB_OUTPUT}"
 
       # ------------------------------------------------------------
-      # Validate and evaluate every model individually
-      # ------------------------------------------------------------
-      # ------------------------------------------------------------
-      # Validate, evaluate, and verify every model individually
+      # Validate, evaluate, and verify each model individually
       # ------------------------------------------------------------
       - name: Validate, evaluate, and verify SysML models
         id: model_checks
@@ -333,11 +331,11 @@ jobs:
             echo "============================================================"
 
             # --------------------------------------------------------
-            # Build model index
+            # Build compact JSON model index
             #
-            # compact-json contains the qualified names of elements
-            # declared by this input model. We use those names later
-            # to distinguish model evaluations from stdlib results.
+            # This gives us qualifiedName information for elements
+            # declared by the user model so that eval output can be
+            # classified as model vs stdlib/external context.
             # --------------------------------------------------------
             echo
             echo "Indexing model elements..."
@@ -390,8 +388,8 @@ jobs:
             # --------------------------------------------------------
             # Evaluation
             #
-            # Keep --all. The reporting step filters/classifies the
-            # results against the model's own qualified names.
+            # Keep --all because otherwise model-owned/inherited
+            # evaluations may not appear.
             # --------------------------------------------------------
             echo
             echo "Evaluating ${relative}..."
@@ -399,8 +397,8 @@ jobs:
             set +e
 
             sysmlv2 eval \
-              --lib "${SYSML_LIB_DIR}" \
               "${file}" \
+              --lib "${SYSML_LIB_DIR}" \
               --all \
               > "${evaluation_txt}" \
               2> "${evaluation_stderr}"
@@ -418,6 +416,8 @@ jobs:
 
             # --------------------------------------------------------
             # Verification
+            #
+            # Produces satisfied / violated / undecided verdicts.
             # --------------------------------------------------------
             echo
             echo "Verifying ${relative}..."
@@ -425,8 +425,8 @@ jobs:
             set +e
 
             sysmlv2 verify \
-              --lib "${SYSML_LIB_DIR}" \
               "${file}" \
+              --lib "${SYSML_LIB_DIR}" \
               > "${verification_txt}" \
               2> "${verification_stderr}"
 
@@ -444,7 +444,7 @@ jobs:
             # --------------------------------------------------------
             # Record result
             # --------------------------------------------------------
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
               "${relative}" \
               "${validation_status}" \
               "${evaluation_status}" \
@@ -456,6 +456,7 @@ jobs:
               "${verification_txt}" \
               "${verification_stderr}" \
               "${model_index_json}" \
+              "${model_index_stderr}" \
               >> "${RESULTS_FILE}"
           done
 
@@ -465,12 +466,14 @@ jobs:
           echo "status=${ANY_FAILED}" \
             >> "${GITHUB_OUTPUT}"
 
-          # Generate the complete report before failing the job.
+          # Do not fail here.
+          # We want reports for every model first.
           exit 0
+
       # ------------------------------------------------------------
       # Generate GitHub report
       # ------------------------------------------------------------
-      - name: Generate validation and evaluation report
+      - name: Generate validation, evaluation, and verification report
         if: always()
         shell: bash
         env:
@@ -491,7 +494,6 @@ jobs:
           # ----------------------------------------------------------
 
           def esc(value):
-              """Escape text for a GitHub Markdown table."""
               if value is None:
                   return ""
 
@@ -503,16 +505,25 @@ jobs:
               )
 
 
+          def read_text(filename):
+              path = Path(filename)
+
+              if not path.exists():
+                  return ""
+
+              return path.read_text(
+                  encoding="utf-8",
+                  errors="replace",
+              ).strip()
+
+
           def read_validation_findings(filename):
               path = Path(filename)
 
               if not path.exists():
                   return []
 
-              raw = path.read_text(
-                  encoding="utf-8",
-                  errors="replace",
-              ).strip()
+              raw = read_text(filename)
 
               if not raw:
                   return []
@@ -537,15 +548,16 @@ jobs:
 
 
           def read_model_qnames(filename):
+              """
+              Extract qualified names from compact JSON generated from
+              the input model.
+              """
               path = Path(filename)
 
               if not path.exists():
                   return set()
 
-              raw = path.read_text(
-                  encoding="utf-8",
-                  errors="replace",
-              ).strip()
+              raw = read_text(filename)
 
               if not raw:
                   return set()
@@ -585,25 +597,24 @@ jobs:
 
           def qualify_eval_subject(subject, model_qnames):
               """
-              Resolve an eval output name to a model FQN where possible
-              and classify its origin.
+              Try to map an eval output subject to an FQN in the
+              user model and classify its origin.
               """
               subject = subject.strip()
 
               if not subject:
                   return subject, "Unknown"
 
-              # Already an exact model FQN.
+              # Already a model FQN.
               if subject in model_qnames:
                   return subject, "Model"
 
-              # Sometimes additional text follows the expression name.
               token = subject.split()[0]
 
               if token in model_qnames:
                   return token, "Model"
 
-              # Try turning a short eval name into a unique model FQN.
+              # Try mapping a short name to a unique model FQN.
               candidates = sorted(
                   qname
                   for qname in model_qnames
@@ -620,8 +631,8 @@ jobs:
               if len(candidates) > 1:
                   return subject, "Model (ambiguous FQN)"
 
-              # A qualified name that isn't part of the model index is
-              # normally coming from the stdlib / inherited context.
+              # Qualified output that is not part of the input-model
+              # element index is likely library/external context.
               if "::" in subject:
                   return subject, "Library / external context"
 
@@ -634,10 +645,7 @@ jobs:
               if not path.exists():
                   return []
 
-              text = path.read_text(
-                  encoding="utf-8",
-                  errors="replace",
-              )
+              text = read_text(filename)
 
               rows = []
 
@@ -677,15 +685,22 @@ jobs:
 
 
           def read_verification_rows(filename):
+              """
+              Parse verify output conservatively.
+
+              Recognized verdicts:
+                  satisfied
+                  violated
+                  undecided
+
+              Unknown output is kept rather than dropped.
+              """
               path = Path(filename)
 
               if not path.exists():
                   return []
 
-              text = path.read_text(
-                  encoding="utf-8",
-                  errors="replace",
-              )
+              text = read_text(filename)
 
               rows = []
 
@@ -722,7 +737,6 @@ jobs:
                       )
 
                   else:
-                      # Keep unexpected CLI output visible.
                       rows.append(
                           {
                               "subject": line,
@@ -732,17 +746,6 @@ jobs:
                       )
 
               return rows
-
-          def read_stderr(filename):
-              path = Path(filename)
-
-              if not path.exists():
-                  return ""
-
-              return path.read_text(
-                  encoding="utf-8",
-                  errors="replace",
-              ).strip()
 
 
           # ----------------------------------------------------------
@@ -775,32 +778,90 @@ jobs:
                       filename,
                       validation_status,
                       evaluation_status,
+                      verification_status,
                       validation_json,
                       validation_stderr,
                       evaluation_file,
                       evaluation_stderr,
-                  ) = line.split("\t", 6)
+                      verification_file,
+                      verification_stderr,
+                      model_index_json,
+                      model_index_stderr,
+                  ) = line.split("\t", 11)
+
+                  model_qnames = read_model_qnames(
+                      model_index_json
+                  )
+
+                  evaluation_rows = read_evaluation_rows(
+                      evaluation_file,
+                      model_qnames,
+                  )
+
+                  model_evaluation_rows = [
+                      row
+                      for row in evaluation_rows
+                      if row["origin"].startswith("Model")
+                  ]
+
+                  context_evaluation_rows = [
+                      row
+                      for row in evaluation_rows
+                      if not row["origin"].startswith("Model")
+                  ]
+
+                  verification_rows = read_verification_rows(
+                      verification_file
+                  )
 
                   models.append(
                       {
                           "file": filename,
-                          "validation_status": int(validation_status),
-                          "evaluation_status": int(evaluation_status),
+
+                          "validation_status":
+                              int(validation_status),
+
+                          "evaluation_status":
+                              int(evaluation_status),
+
+                          "verification_status":
+                              int(verification_status),
+
                           "validation_findings":
                               read_validation_findings(
                                   validation_json
                               ),
+
                           "validation_stderr":
-                              read_stderr(
+                              read_text(
                                   validation_stderr
                               ),
+
                           "evaluation_rows":
-                              read_evaluation_rows(
-                                  evaluation_file
-                              ),
+                              evaluation_rows,
+
+                          "model_evaluation_rows":
+                              model_evaluation_rows,
+
+                          "context_evaluation_rows":
+                              context_evaluation_rows,
+
                           "evaluation_stderr":
-                              read_stderr(
+                              read_text(
                                   evaluation_stderr
+                              ),
+
+                          "verification_rows":
+                              verification_rows,
+
+                          "verification_stderr":
+                              read_text(
+                                  verification_stderr
+                              ),
+
+                          "model_index_stderr":
+                              read_text(
+                                  model_index_stderr
                               ),
                       }
                   )
@@ -810,14 +871,12 @@ jobs:
           # Summary counts
           # ----------------------------------------------------------
 
+          total = len(models)
+
           validation_passed = sum(
               1
               for model in models
               if model["validation_status"] == 0
-          )
-
-          validation_failed = (
-              len(models) - validation_passed
           )
 
           evaluation_passed = sum(
@@ -826,8 +885,10 @@ jobs:
               if model["evaluation_status"] == 0
           )
 
-          evaluation_failed = (
-              len(models) - evaluation_passed
+          verification_passed = sum(
+              1
+              for model in models
+              if model["verification_status"] == 0
           )
 
           fully_passed = sum(
@@ -836,11 +897,12 @@ jobs:
               if (
                   model["validation_status"] == 0
                   and model["evaluation_status"] == 0
+                  and model["verification_status"] == 0
               )
           )
 
           failed_models = (
-              len(models) - fully_passed
+              total - fully_passed
           )
 
 
@@ -851,7 +913,7 @@ jobs:
           report = []
 
           report.append(
-              "# SysML v2 Example Validation and Evaluation"
+              "# SysML v2 Validation, Evaluation, and Verification"
           )
 
           report.append("")
@@ -901,22 +963,29 @@ jobs:
           report.append(
               f"| Validation "
               f"| {validation_passed} "
-              f"| {validation_failed} "
-              f"| {len(models)} |"
+              f"| {total - validation_passed} "
+              f"| {total} |"
           )
 
           report.append(
               f"| Evaluation "
               f"| {evaluation_passed} "
-              f"| {evaluation_failed} "
-              f"| {len(models)} |"
+              f"| {total - evaluation_passed} "
+              f"| {total} |"
           )
 
           report.append(
-              f"| Both "
+              f"| Verification "
+              f"| {verification_passed} "
+              f"| {total - verification_passed} "
+              f"| {total} |"
+          )
+
+          report.append(
+              f"| All three "
               f"| {fully_passed} "
               f"| {failed_models} "
-              f"| {len(models)} |"
+              f"| {total} |"
           )
 
 
@@ -929,14 +998,16 @@ jobs:
           report.append("")
 
           report.append(
-              "| Model | Validation | Evaluation | Findings | Values |"
+              "| Model | Validation | Evaluation | Verification "
+              "| Findings | Model Values | Verify Results |"
           )
 
           report.append(
-              "|---|---|---|---:|---:|"
+              "|---|---|---|---|---:|---:|---:|"
           )
 
           for model in models:
+
               validation_result = (
                   "✅ Passed"
                   if model["validation_status"] == 0
@@ -949,12 +1020,20 @@ jobs:
                   else "❌ Failed"
               )
 
+              verification_result = (
+                  "✅ Passed"
+                  if model["verification_status"] == 0
+                  else "❌ Failed"
+              )
+
               report.append(
                   f"| `{esc(model['file'])}` "
                   f"| {validation_result} "
                   f"| {evaluation_result} "
+                  f"| {verification_result} "
                   f"| {len(model['validation_findings'])} "
-                  f"| {len(model['evaluation_rows'])} |"
+                  f"| {len(model['model_evaluation_rows'])} "
+                  f"| {len(model['verification_rows'])} |"
               )
 
 
@@ -963,6 +1042,7 @@ jobs:
           # ----------------------------------------------------------
 
           for model in models:
+
               report.append("")
               report.append("---")
               report.append("")
@@ -988,9 +1068,12 @@ jobs:
                       "❌ Validation failed."
                   )
 
-              findings = model["validation_findings"]
+              findings = (
+                  model["validation_findings"]
+              )
 
               if findings:
+
                   report.append("")
 
                   report.append(
@@ -1002,6 +1085,7 @@ jobs:
                   )
 
                   for finding in findings:
+
                       severity = (
                           finding.get("severity")
                           or finding.get("level")
@@ -1067,34 +1151,31 @@ jobs:
                       )
 
               elif model["validation_status"] == 0:
+
                   report.append("")
                   report.append(
                       "No validation findings."
                   )
 
               else:
+
                   report.append("")
                   report.append(
                       "No structured validation findings were returned."
                   )
 
               if model["validation_stderr"]:
-                  report.append("")
-                  report.append(
-                      "<details>"
-                  )
 
+                  report.append("")
+                  report.append("<details>")
                   report.append(
                       "<summary>Validation stderr</summary>"
                   )
-
                   report.append("")
                   report.append("```text")
-
                   report.append(
                       model["validation_stderr"]
                   )
-
                   report.append("```")
                   report.append("")
                   report.append("</details>")
@@ -1117,45 +1198,106 @@ jobs:
                       "❌ Evaluation failed."
                   )
 
-              evaluation_rows = (
-                  model["evaluation_rows"]
+              model_rows = (
+                  model["model_evaluation_rows"]
               )
 
-              if evaluation_rows:
+              context_rows = (
+                  model["context_evaluation_rows"]
+              )
+
+              if model_rows:
+
+                  report.append("")
+                  report.append(
+                      "#### Values originating from this model"
+                  )
                   report.append("")
 
                   report.append(
-                      "| Feature / Expression | Value |"
+                      "| Fully qualified feature / expression "
+                      "| Value | Origin |"
                   )
 
                   report.append(
-                      "|---|---|"
+                      "|---|---|---|"
                   )
 
-                  for feature, value in evaluation_rows:
+                  for row in model_rows:
+
                       report.append(
-                          f"| `{esc(feature)}` "
-                          f"| `{esc(value)}` |"
+                          f"| `{esc(row['fqn'])}` "
+                          f"| `{esc(row['value'])}` "
+                          f"| {esc(row['origin'])} |"
                       )
 
               elif model["evaluation_status"] == 0:
+
                   report.append("")
                   report.append(
-                      "Evaluation completed successfully, "
-                      "but no evaluated values were returned."
+                      "No evaluation result could be mapped "
+                      "to an element declared in this `.sysml` model."
                   )
 
-              else:
+              if context_rows:
+
                   report.append("")
+                  report.append("<details>")
+
                   report.append(
-                      "Evaluation failed before producing values."
+                      f"<summary>"
+                      f"{len(context_rows)} library / external / "
+                      f"unresolved evaluation result(s)"
+                      f"</summary>"
                   )
+
+                  report.append("")
+
+                  report.append(
+                      "| Feature / Expression | Value | Origin |"
+                  )
+
+                  report.append(
+                      "|---|---|---|"
+                  )
+
+                  for row in context_rows:
+
+                      report.append(
+                          f"| `{esc(row['fqn'])}` "
+                          f"| `{esc(row['value'])}` "
+                          f"| {esc(row['origin'])} |"
+                      )
+
+                  report.append("")
+                  report.append("</details>")
+
+              if model["model_index_stderr"]:
+
+                  report.append("")
+                  report.append("<details>")
+
+                  report.append(
+                      "<summary>"
+                      "Model provenance index stderr"
+                      "</summary>"
+                  )
+
+                  report.append("")
+                  report.append("```text")
+
+                  report.append(
+                      model["model_index_stderr"]
+                  )
+
+                  report.append("```")
+                  report.append("")
+                  report.append("</details>")
 
               if model["evaluation_stderr"]:
+
                   report.append("")
-                  report.append(
-                      "<details>"
-                  )
+                  report.append("<details>")
 
                   report.append(
                       "<summary>Evaluation stderr</summary>"
@@ -1173,6 +1315,101 @@ jobs:
                   report.append("</details>")
 
 
+              # ------------------------------------------------------
+              # Verification
+              # ------------------------------------------------------
+
+              report.append("")
+              report.append("### Verification")
+              report.append("")
+
+              if model["verification_status"] == 0:
+                  report.append(
+                      "✅ Verification completed."
+                  )
+              else:
+                  report.append(
+                      "❌ Verification failed."
+                  )
+
+              verification_rows = (
+                  model["verification_rows"]
+              )
+
+              if verification_rows:
+
+                  report.append("")
+
+                  report.append(
+                      "| Requirement / Constraint "
+                      "| Verdict | Detail |"
+                  )
+
+                  report.append(
+                      "|---|---|---|"
+                  )
+
+                  for row in verification_rows:
+
+                      verdict = (
+                          row["verdict"]
+                      )
+
+                      if verdict == "satisfied":
+                          verdict_display = (
+                              "✅ satisfied"
+                          )
+
+                      elif verdict == "violated":
+                          verdict_display = (
+                              "❌ violated"
+                          )
+
+                      elif verdict == "undecided":
+                          verdict_display = (
+                              "⚠️ undecided"
+                          )
+
+                      else:
+                          verdict_display = ""
+
+                      report.append(
+                          f"| `{esc(row['subject'])}` "
+                          f"| {esc(verdict_display)} "
+                          f"| {esc(row['detail'])} |"
+                      )
+
+              elif model["verification_status"] == 0:
+
+                  report.append("")
+                  report.append(
+                      "Verification completed successfully, "
+                      "but no verdicts were returned."
+                  )
+
+              if model["verification_stderr"]:
+
+                  report.append("")
+                  report.append("<details>")
+
+                  report.append(
+                      "<summary>"
+                      "Verification stderr"
+                      "</summary>"
+                  )
+
+                  report.append("")
+                  report.append("```text")
+
+                  report.append(
+                      model["verification_stderr"]
+                  )
+
+                  report.append("```")
+                  report.append("")
+                  report.append("</details>")
+
+
           # ----------------------------------------------------------
           # Final summary
           # ----------------------------------------------------------
@@ -1182,18 +1419,25 @@ jobs:
           report.append("")
 
           if failed_models == 0:
+
               report.append(
-                  "✅ All SysML models passed validation and evaluation."
+                  "✅ All SysML models passed validation, "
+                  "evaluation, and verification."
               )
+
           else:
+
               report.append(
-                  f"❌ {failed_models} of {len(models)} model(s) "
-                  "failed validation or evaluation."
+                  f"❌ {failed_models} of {total} model(s) "
+                  "failed validation, evaluation, or verification."
               )
 
           report.append("")
 
-          report_text = "\n".join(report) + "\n"
+          report_text = (
+              "\n".join(report)
+              + "\n"
+          )
 
           report_file = Path(
               "reports/report.md"
@@ -1209,33 +1453,38 @@ jobs:
           )
 
           if summary_file:
+
               with open(
                   summary_file,
                   "a",
                   encoding="utf-8",
               ) as f:
-                  f.write(report_text)
 
-          print(report_text)
+                  f.write(
+                      report_text
+                  )
+
+          print(
+              report_text
+          )
 
           PY
 
       # ------------------------------------------------------------
-      # Upload complete report and raw command output
+      # Upload raw results and report
       # ------------------------------------------------------------
-      - name: Upload validation and evaluation report
+      - name: Upload validation, evaluation, and verification report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sysml-examples-validation-evaluation
+          name: sysml-examples-validation-evaluation-verification
           path: reports/
           retention-days: 30
 
       # ------------------------------------------------------------
       # Final gate
       #
-      # This intentionally occurs after report generation so that
-      # every .sysml model is checked even when earlier models fail.
+      # Only fail after every model has been processed and reported.
       # ------------------------------------------------------------
       - name: Enforce model results
         if: always()
@@ -1251,8 +1500,8 @@ jobs:
           fi
 
           if [[ "${STATUS}" != "0" ]]; then
-            echo "::error::One or more SysML models failed validation or evaluation"
+            echo "::error::One or more SysML models failed validation, evaluation, or verification"
             exit 1
           fi
 
-          echo "All SysML models passed validation and evaluation."
+          echo "All SysML models passed validation, evaluation, and verification."
