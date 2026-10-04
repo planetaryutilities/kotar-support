@@ -44,9 +44,9 @@ analysis def VehicleMassAnalysis {
         objective massAnalysisObjective {
     doc 
     /* The objective of this analysis is to determine whether the
-             * current crawler design configuration can satisfy the 
-             * mass requirement.
-             */
+             * current crawler design configuration can satisfy the 
+             * mass requirement.
+             */
     require massRequirement;
     }
 }
@@ -70,14 +70,15 @@ part def CrawlerContext {
     }
 
     part analysisContext {
-        analysis massAnalysisT : VehicleMassAnalysis {
-            subject :>> crawler :> tinycrawler;
+        // Analaysis usage written without a multiplicity defaults to [0..*], give it explicit [1]
+        analysis massAnalysisT : VehicleMassAnalysis[1] {
+            subject :>> crawler = tinycrawler;
             in requirement massRequirement = maxRequiredMass {
             subject :>> crawler :> tinycrawler;
             }
         }
         analysis massAnalysisM : VehicleMassAnalysis {
-            subject :>> crawler :> medcrawler;
+            subject :>> crawler = medcrawler;
             in requirement massRequirement = maxRequiredMass {
             subject :>> crawler :> medcrawler;
             }
