@@ -344,7 +344,7 @@ jobs:
 
             sysmlv2 convert \
               "${file}" \
-              --to compact-json \
+              --to full-json \
               --lib "${SYSML_LIB_DIR}" \
               > "${model_index_json}" \
               2> "${model_index_stderr}"
@@ -548,25 +548,21 @@ jobs:
 
 
           def read_model_qnames(filename):
-              """
-              Extract qualified names from compact JSON generated from
-              the input model.
-              """
               path = Path(filename)
-
+          
               if not path.exists():
                   return set()
-
+          
               raw = read_text(filename)
-
+          
               if not raw:
                   return set()
-
+          
               try:
                   data = json.loads(raw)
               except json.JSONDecodeError:
                   return set()
-
+          
               if isinstance(data, dict):
                   data = (
                       data.get("elements")
@@ -574,70 +570,60 @@ jobs:
                       or data.get("data")
                       or []
                   )
-
+          
               if not isinstance(data, list):
                   return set()
-
+          
               qnames = set()
-
+          
               for element in data:
                   if not isinstance(element, dict):
                       continue
-
+          
                   qname = (
                       element.get("qualifiedName")
                       or element.get("qualified_name")
                   )
-
+          
                   if isinstance(qname, str) and qname.strip():
                       qnames.add(qname.strip())
-
+          
               return qnames
-
-
-          def qualify_eval_subject(subject, model_qnames):
-              """
-              Try to map an eval output subject to an FQN in the
-              user model and classify its origin.
-              """
-              subject = subject.strip()
-
-              if not subject:
-                  return subject, "Unknown"
-
-              # Already a model FQN.
-              if subject in model_qnames:
-                  return subject, "Model"
-
-              token = subject.split()[0]
-
-              if token in model_qnames:
-                  return token, "Model"
-
-              # Try mapping a short name to a unique model FQN.
-              candidates = sorted(
-                  qname
-                  for qname in model_qnames
-                  if (
-                      qname == subject
-                      or qname.endswith("::" + subject)
-                      or qname.endswith("::" + token)
-                  )
-              )
-
-              if len(candidates) == 1:
-                  return candidates[0], "Model"
-
-              if len(candidates) > 1:
-                  return subject, "Model (ambiguous FQN)"
-
-              # Qualified output that is not part of the input-model
-              # element index is likely library/external context.
-              if "::" in subject:
-                  return subject, "Library / external context"
-
-              return subject, "Unknown"
-
+          
+                    def qualify_eval_subject(subject, model_qnames):
+                        subject = subject.strip()
+                    
+                        if not subject:
+                            return subject, "Unknown"
+                    
+                        if subject in model_qnames:
+                            return subject, "Model"
+                    
+                        token = subject.split()[0]
+                    
+                        if token in model_qnames:
+                            return token, "Model"
+                    
+                        candidates = sorted(
+                            qname
+                            for qname in model_qnames
+                            if (
+                                qname == subject
+                                or qname.endswith("::" + subject)
+                                or qname.endswith("::" + token)
+                            )
+                        )
+                    
+                        if len(candidates) == 1:
+                            return candidates[0], "Model"
+                    
+                        if len(candidates) > 1:
+                            return subject, "Model (ambiguous FQN)"
+                    
+                        if "::" in subject:
+                            return subject, "Library / external context"
+                    
+                        return subject, "Unknown"
 
           def read_evaluation_rows(filename, model_qnames):
               path = Path(filename)
