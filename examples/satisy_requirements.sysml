@@ -1,5 +1,6 @@
 package parts {
     private import ScalarValues::*;
+    private import ScalarFunctions::*;
     private import SI::*;
     private import ISQ::*;
 
@@ -13,11 +14,17 @@ package parts {
         attribute wheelbase : LengthValue default 1 [cm];
     }
 
+    part def Engine :> 'base parts'::CadRepresentedPart {
+    }
+
     part def MOACrawler {
         part chassis : Chassis {
             :>> mass default 0.1 [kg];
         }
-    attribute vehicleMass : MassValue default chassis.mass;
+        part engine : Engine {
+            :>> mass default 0.05 [kg];
+        }
+    attribute vehicleMass : MassValue default chassis.mass + engine.mass;
     }
 }
 
