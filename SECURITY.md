@@ -1,6 +1,6 @@
 # Security Policy
 
-We take security concerns involving **Starforge WebIDE** seriously.
+We take security concerns involving **Starforge Kotar** seriously.
 
 ## Reporting a Security Vulnerability
 
@@ -21,7 +21,7 @@ Replace the address above with the appropriate security contact before publishin
 When reporting a suspected vulnerability, please provide as much information as reasonably possible, including:
 
 - Description of the vulnerability
-- Affected Starforge WebIDE version
+- Affected Starforge Kotar version
 - Environment in which the issue was observed
 - Steps required to reproduce the issue
 - Proof-of-concept information, where appropriate
@@ -73,7 +73,7 @@ Unless separately announced, Starforge does not operate a bug bounty program.
 
 ## Scope
 
-This security policy applies to supported Starforge WebIDE software and associated Starforge-operated services where applicable.
+This security policy applies to supported Starforge Kotar software and associated Starforge-operated services where applicable.
 
 Third-party products, browsers, operating systems, hosting providers, plugins, libraries, or external services may be governed by their respective vendors' security policies.
 
@@ -81,7 +81,7 @@ Third-party products, browsers, operating systems, hosting providers, plugins, l
 
 ## Supported Versions
 
-Security updates are generally provided for versions of Starforge WebIDE that are currently supported.
+Security updates are generally provided for versions of Starforge Kotar that are currently supported.
 
 Specific supported-version information may be published separately in release documentation.
 
