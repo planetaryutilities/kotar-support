@@ -6,23 +6,23 @@ All rights reserved except where expressly stated otherwise.
 
 ---
 
-## Starforge WebIDE Software
+## Starforge Kotar Software
 
-Starforge WebIDE is proprietary software.
+Starforge Kotar is proprietary software.
 
-The Starforge WebIDE software, including its source code, binaries, architecture, implementation, user interfaces, services, and associated proprietary components, is **not licensed under this repository**.
+The Starforge Kotar software, including its source code, binaries, architecture, implementation, user interfaces, services, and associated proprietary components, is **not licensed under this repository**.
 
-Nothing in this repository grants any license or other rights to Starforge WebIDE except as expressly provided under a separate applicable software license agreement or other written agreement.
+Nothing in this repository grants any license or other rights to Starforge Kotar except as expressly provided under a separate applicable software license agreement or other written agreement.
 
-The public availability of this repository does not mean that Starforge WebIDE is open-source software.
+The public availability of this repository does not mean that Starforge Kotar is open-source software.
 
 ---
 
 ## Repository Content
 
-This repository contains support and documentation material relating to Starforge WebIDE.
+This repository contains support and documentation material relating to Starforge Kotar.
 
-Unless otherwise expressly identified, documentation and other content in this repository may be viewed and used for the purpose of learning about, operating, evaluating, or obtaining support for Starforge WebIDE.
+Unless otherwise expressly identified, documentation and other content in this repository may be viewed and used for the purpose of learning about, operating, evaluating, or obtaining support for Starforge Kotar.
 
 No right is granted to:
 
@@ -45,7 +45,7 @@ References to third-party products or organizations do not imply endorsement unl
 
 ## Trademarks
 
-Starforge, Starforge WebIDE, Planetary Utilities, associated product names, logos, and branding may be trademarks or service marks of Planetary Utilities, LLC or their respective owners.
+Starforge, Starforge Kotar, Planetary Utilities, associated product names, logos, and branding may be trademarks or service marks of Planetary Utilities, LLC or their respective owners.
 
 No trademark license is granted by publication of this repository.
 
@@ -53,7 +53,7 @@ No trademark license is granted by publication of this repository.
 
 ## No Software License
 
-For avoidance of doubt, no open-source software license, including but not limited to the Apache License, MIT License, BSD licenses, GPL, LGPL, or similar licenses, applies to Starforge WebIDE merely because documentation or support material is hosted in this public repository.
+For avoidance of doubt, no open-source software license, including but not limited to the Apache License, MIT License, BSD licenses, GPL, LGPL, or similar licenses, applies to Starforge Kotar merely because documentation or support material is hosted in this public repository.
 
 Any software that is separately provided under an open-source license will identify the applicable license explicitly.
 
@@ -67,4 +67,4 @@ PLANETARY UTILITIES, LLC DOES NOT WARRANT THAT THE INFORMATION IN THIS REPOSITOR
 
 TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, PLANETARY UTILITIES, LLC SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES ARISING FROM OR RELATED TO USE OF THE CONTENT OF THIS REPOSITORY.
 
-Any contractual warranties, support obligations, or liability provisions applicable to Starforge WebIDE are governed exclusively by the applicable written agreement governing use of the software.
+Any contractual warranties, support obligations, or liability provisions applicable to Starforge Kotar are governed exclusively by the applicable written agreement governing use of the software.
