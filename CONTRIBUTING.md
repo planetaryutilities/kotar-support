@@ -1,6 +1,6 @@
-# Contributing to Starforge WebIDE Support
+# Contributing to Starforge Kotar Support
 
-Thank you for helping improve the Starforge WebIDE documentation and user experience.
+Thank you for helping improve the Starforge Kotar documentation and user experience.
 
 This repository is primarily intended for:
 
@@ -9,7 +9,7 @@ This repository is primarily intended for:
 - Documentation improvements
 - User feedback
 
-Starforge WebIDE itself is proprietary software. This repository is not the WebIDE source-code repository and does not provide access to the proprietary implementation.
+Starforge Kotar itself is proprietary software. This repository is not the Kotar source-code repository and does not provide access to the proprietary implementation.
 
 ---
 
@@ -19,7 +19,7 @@ Please use the Bug Report issue form.
 
 A useful bug report should contain:
 
-- Starforge WebIDE version
+- Starforge Kotar version
 - Browser and version
 - Operating system
 - Description of the problem
@@ -41,7 +41,7 @@ Please explain:
 
 1. What you are trying to accomplish.
 2. What currently prevents or complicates that workflow.
-3. What capability you would like WebIDE to provide.
+3. What capability you would like Kotar to provide.
 4. What you expect the resulting workflow to look like.
 
 Providing the underlying use case is often more useful than proposing only a specific implementation.
@@ -120,12 +120,12 @@ Do not submit material that you do not have the right to contribute.
 
 By submitting material to this repository, you represent that you have the necessary rights to make the submission.
 
-Submission of material to this repository does not grant rights to the proprietary Starforge WebIDE software.
+Submission of material to this repository does not grant rights to the proprietary Starforge Kotar software.
 
 ---
 
 ## Conduct
 
-Please keep interactions professional, constructive, and relevant to Starforge WebIDE.
+Please keep interactions professional, constructive, and relevant to Starforge Kotar.
 
 Issues or comments containing spam, harassment, abusive content, confidential information, or unrelated material may be edited, hidden, locked, or removed.
