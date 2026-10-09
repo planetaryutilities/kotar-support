@@ -36,6 +36,11 @@ Suggested starting points:
 See the **Wiki** tab at the top of this repository.
 
 ---
+## Downloads
+- [Dockerhub](https://hub.docker.com/repository/docker/planetaryutilities/kotar/general)
+- Desktop - To be announced
+
+---
 
 ## Reporting a Bug
 
