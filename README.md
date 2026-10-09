@@ -41,6 +41,11 @@ See the **Wiki** tab at the top of this repository.
 - Desktop - To be announced
 
 ---
+## Resources
+You can use the public OpenMBEE Flexo instance to publish models from Kotar:
+[OpenMBEE Flexo MMS instance](https://github.com/Open-MBEE/open-mbee.github.io/wiki/Participate-in-OpenMBEE-and-OpenSysML)
+
+---
 
 ## Reporting a Bug
 
