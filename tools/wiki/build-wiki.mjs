@@ -45,12 +45,33 @@ const read = (name) => {
 	return hit ? readFileSync(hit, 'utf8') : '';
 };
 
-/** A wiki link (`Page-Name`, no extension) becomes `Page-Name.html`. */
+// Where the wiki lives, for links that point outside it. Actions sets
+// GITHUB_REPOSITORY; the fallback keeps a local build honest.
+const REPO = process.env.GITHUB_REPOSITORY ?? 'planetaryutilities/kotar-support';
+
+// Every wiki page sits at the same depth (`/OWNER/REPO/wiki/<Page>`), so
+// a `../`-style link resolves the same from any of them.
+const WIKI_BASE = `https://github.com/${REPO}/wiki/Home`;
+
+/**
+ * A wiki link (`Page-Name`, no extension) becomes `Page-Name.html`.
+ *
+ * A link that walks out of the wiki (`../../issues/new/choose`) is not a
+ * page: on GitHub the browser resolves it against the wiki URL, so it is
+ * resolved the same way here and emitted absolute. Treating it as a page
+ * produced `choose.html`, a 404 on the published site.
+ */
 const link_rewrite = (html) => html.replace(
 	/href="([^"#?:]+)((?:[#?][^"]*)?)"/g,
 	(whole, target, tail) => {
 		// absolute, protocol-relative and anchors are left alone
 		if(/^(?:[a-z][a-z\d+\-.]*:|\/\/|#)/i.test(target)) return whole;
+
+		// out of the wiki: resolve exactly as a browser would on GitHub, so
+		// the published site follows the same link the wiki does
+		if(target.startsWith('/') || target.split('/').includes('..')) {
+			return `href="${new URL(target, WIKI_BASE).href}${tail}"`;
+		}
 
 		// an asset (an image, a PDF) keeps its path; only pages gain .html
 		if(extname(target)) return whole;
