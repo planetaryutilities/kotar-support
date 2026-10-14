@@ -1,0 +1,71 @@
+# Publish the wiki to GitHub Pages.
+#
+# The wiki cannot be embedded in the IDE directly: github.com answers
+# `X-Frame-Options: deny`, which no client-side setting defeats. A Pages
+# site has no such header, so the IDE can frame this instead and readers
+# get the real pages — navigation, images and all.
+#
+# `gollum` is the wiki-edit event, so an editor publishes by saving a
+# page, exactly as they do today. The push trigger covers changes to the
+# generator itself.
+
+name: Publish wiki to Pages
+
+on:
+  gollum:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-wiki.yml
+      - tools/wiki/**
+
+# The deploy job needs these; the token is how deploy-pages authenticates.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One publish at a time. A run already deploying is left to finish, so a
+# burst of wiki edits cannot land out of order.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository (for the generator)
+        uses: actions/checkout@v4
+
+      # The wiki is a separate git repository: <repo>.wiki.git
+      - name: Check out the wiki
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install the renderer
+        run: npm install --no-save --no-audit --no-fund marked@^14
+
+      - name: Build the site
+        run: node tools/wiki/build-wiki.mjs wiki site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
