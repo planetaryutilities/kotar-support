@@ -1,13 +1,13 @@
 # Code of Conduct
 
-The Starforge WebIDE support repository is intended to provide a professional environment for product support, documentation, bug reporting, and technical discussion.
+The Starforge Kotar support repository is intended to provide a professional environment for product support, documentation, bug reporting, and technical discussion.
 
 ## Expected Conduct
 
 Participants are expected to:
 
 - Communicate professionally and respectfully
-- Keep discussions relevant to Starforge WebIDE
+- Keep discussions relevant to Starforge Kotar
 - Provide constructive technical feedback
 - Avoid knowingly misleading or inaccurate reports
 - Respect the privacy and intellectual property of others
