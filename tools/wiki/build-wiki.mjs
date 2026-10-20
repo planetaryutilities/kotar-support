@@ -9,6 +9,13 @@
 //
 // `_Sidebar.md` and `_Footer.md` are GitHub's wiki chrome, not pages:
 // they become the nav column and the footer on every page.
+//
+// Links that leave the wiki: a relative link that climbs out of it
+// (`../issues`) points into the repository, as it does on GitHub, and
+// is written out as an absolute URL there. Every link that leaves the
+// site (those, and any absolute http(s) link) opens a tab of its own:
+// the site is also shown inside a frame, and most sites, github.com
+// included, refuse to be framed.
 
 import {readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, readdirSync, statSync} from 'node:fs';
 import {join, basename, extname, relative} from 'node:path';
@@ -45,20 +52,57 @@ const read = (name) => {
 	return hit ? readFileSync(hit, 'utf8') : '';
 };
 
-/** A wiki link (`Page-Name`, no extension) becomes `Page-Name.html`. */
-const link_rewrite = (html) => html.replace(
-	/href="([^"#?:]+)((?:[#?][^"]*)?)"/g,
-	(whole, target, tail) => {
-		// absolute, protocol-relative and anchors are left alone
-		if(/^(?:[a-z][a-z\d+\-.]*:|\/\/|#)/i.test(target)) return whole;
+/** The host the wiki lives on, and its repository there (GitHub Actions names both; a local build falls back to this one). */
+const SERVER = process.env.GITHUB_SERVER_URL ?? 'https://github.com';
+const REPOSITORY = `${SERVER}/${process.env.GITHUB_REPOSITORY ?? 'planetaryutilities/kotar-support'}`;
 
-		// an asset (an image, a PDF) keeps its path; only pages gain .html
-		if(extname(target)) return whole;
+/**
+ * Where a link of the wiki points on the site, and whether it leaves it.
+ *
+ * - `Page-Name` (a wiki link, no extension) becomes `Page-Name.html`.
+ * - `../issues` climbs out of the wiki into its repository: GitHub
+ *   serves the wiki under `<repository>/wiki/`, so that is the
+ *   repository's issue list. Every leading `../` reads the same way, so
+ *   `../../issues`, which resolves past the repository on GitHub (a
+ *   404 there), lands on the issues too.
+ * - `/path` is a path on GitHub itself.
+ */
+const href_of = (href) => {
+	// an anchor on the same page stays
+	if(href.startsWith('#')) return [href, false];
 
-		// flat namespace: a link may carry a directory that the output drops
-		return `href="${basename(target)}.html${tail}"`;
-	}
-);
+	// climbs out of the wiki: into its repository
+	const up = /^(?:\.\.\/)+(.*)$/.exec(href);
+	if(up) return [`${REPOSITORY}/${up[1]}`, true];
+
+	// absolute or protocol-relative: as written, and only http(s) leaves the site (mailto: and the like open what they open)
+	if(/^(?:[a-z][a-z\d+\-.]*:|\/\/)/i.test(href)) return [href, /^(?:https?:)?\/\//i.test(href)];
+
+	// root-relative: a path on GitHub
+	if(href.startsWith('/')) return [`${SERVER}${href}`, true];
+
+	// split off the query and fragment
+	const [, target, tail] = /^([^#?]*)(.*)$/.exec(href);
+
+	// an asset (an image, a PDF) keeps its path; only pages gain .html
+	if(!target || extname(target)) return [href, false];
+
+	// flat namespace: a link may carry a directory that the output drops
+	return [`${basename(target)}.html${tail}`, false];
+};
+
+/** Rewrites every link of the rendered HTML; one that leaves the site opens a new tab. */
+const link_rewrite = (html) => html.replace(/<a\s([^>]*)>/gi, (whole, attributes) => {
+	const href = /\bhref="([^"]*)"/i.exec(attributes);
+	if(!href) return whole;
+
+	const [target, leaves] = href_of(href[1]);
+	let out = attributes.replace(href[0], `href="${target}"`);
+
+	// a tab of its own, unless the page already chose one
+	if(leaves && !/\btarget=/i.test(out)) out += ' target="_blank" rel="noopener noreferrer"';
+	return `<a ${out}>`;
+});
 
 const render = async (md) => link_rewrite(await marked.parse(md, {async:true}));
 
